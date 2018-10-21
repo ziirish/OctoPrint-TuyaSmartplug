@@ -1,5 +1,5 @@
-<h4>TP-Link Smartplug Settings</h4>
-<table class="table table-condensed" data-bind='visible: settings.settings.plugins.tplinksmartplug.arrSmartplugs().length > 0'>
+<h4>Tuya Smartplug Settings</h4>
+<table class="table table-condensed" data-bind='visible: settings.settings.plugins.tuyasmartplug.arrSmartplugs().length > 0'>
 	<thead>
 		<tr>
 			<td>{{ _('Plug') }}</td>
@@ -7,7 +7,7 @@
 			<td style="text-align:center"><a href="#" class="btn btn-mini icon-plus" data-bind="click: addPlug"></a></td>
 		</tr>
 	</thead>
-	<tbody data-bind="foreach: settings.settings.plugins.tplinksmartplug.arrSmartplugs">
+	<tbody data-bind="foreach: settings.settings.plugins.tuyasmartplug.arrSmartplugs">
 		<tr data-bind="attr: {title: ip}">
 			<td><span data-bind="text: label" /></td>
 			<td style="text-align:center">
@@ -21,7 +21,7 @@
 			<td style="text-align:center">
 				<div class="btn-group">
 					<a href="#" class="btn btn-mini icon-pencil" data-bind="click: $root.editPlug"></a>
-					<a href="#" class="btn btn-mini icon-trash" data-bind="click: $root.removePlug, visible: $root.settings.settings.plugins.tplinksmartplug.arrSmartplugs().length > 1"></a>
+					<a href="#" class="btn btn-mini icon-trash" data-bind="click: $root.removePlug, visible: $root.settings.settings.plugins.tuyasmartplug.arrSmartplugs().length > 1"></a>
 				</div>
 				</td>
 		</tr>
@@ -31,35 +31,40 @@
 <div class="control-group">
 	<div class="controls">
 		<label class="checkbox">
-		<input type="checkbox" data-bind="checked: settings.settings.plugins.tplinksmartplug.debug_logging"> Enable debug logging.
+		<input type="checkbox" data-bind="checked: settings.settings.plugins.tuyasmartplug.debug_logging"> Enable debug logging.
 		</label>
 	</div>
 </div>
 <div class="control-group">
 	<div class="controls">
 		<label class="checkbox">
-		<input type="checkbox" data-bind="checked: settings.settings.plugins.tplinksmartplug.pollingEnabled" /> Enable polling of status.
+		<input type="checkbox" data-bind="checked: settings.settings.plugins.tuyasmartplug.pollingEnabled" /> Enable polling of status.
 		</label>
 	</div>
 </div>
-<div class="control-group" data-bind="visible: settings.settings.plugins.tplinksmartplug.pollingEnabled">
+<div class="control-group" data-bind="visible: settings.settings.plugins.tuyasmartplug.pollingEnabled">
 	<div class="controls">
 		<label class="control-label">{{ _('Minutes between checks') }}</label>
-		<input type="number" min="0" data-bind="value: settings.settings.plugins.tplinksmartplug.pollingInterval" />
+		<input type="number" min="0" data-bind="value: settings.settings.plugins.tuyasmartplug.pollingInterval" />
 	</div>
 </div>
 
-<div id="TPLinkPlugEditor" data-bind="with: selectedPlug" class="modal hide fade">
+<div id="TuyaPlugEditor" data-bind="with: selectedPlug" class="modal hide fade">
 	<div class="modal-header">
 		<a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-		<h3>TP-Link Smartplug Editor</h3>
+		<h3>Tuya Smartplug Editor</h3>
 	</div>
 	<div class="modal-body">
 		<table class="table table-condensed">
 			<tr>
-				<td><div class="controls"><label class="control-label">{{ _('IP') }}</label><input type="text" class="input-block-level" data-bind="value: ip" /><div></td>
+				<td><div class="controls"><label class="control-label">{{ _('IP') }}</label><input type="text" class="input-block-level" data-bind="value: ip" /></div></td>
 				<td><div class="controls"><label class="control-label">{{ _('Label') }}</label><input type="text" class="input input-small" data-bind="value: label" /></div></td>
-				<td><div class="controls"><label class="control-label"><a href="http://fontawesome.io/3.2.1/cheatsheet/" target="_blank">{{ _('Icon Class') }}</a></label><input type="text" class="input-block-level" data-bind="value: icon" /><div></td>
+				<td><div class="controls"><label class="control-label"><a href="http://fontawesome.io/3.2.1/cheatsheet/" target="_blank">{{ _('Icon Class') }}</a></label><input type="text" class="input-block-level" data-bind="value: icon" /></div></td>
+			</tr>
+			<tr>
+				<td><div class="controls"><label class="control-label">{{ _('Device ID') }}</label><input type="text" class="input-block-level" data-bind="value: id" /></div></td>
+				<td><div class="controls"><label class="control-label">{{ _('Local Key') }}</label><input type="password" clas"input-block-level" data-bind="value: localKey" /></div></td>
+				<td></td>
 			</tr>
 			<tr>
 				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: displayWarning"/> Warning Prompt</label></div></td>

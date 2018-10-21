@@ -1,11 +1,11 @@
 /*
- * View model for OctoPrint-TPLinkSmartplug
+ * View model for OctoPrint-TuyaSmartplug
  *
- * Author: jneilliii
+ * Author: ziirish
  * License: AGPLv3
  */
 $(function() {
-    function tplinksmartplugViewModel(parameters) {
+    function tuyasmartplugViewModel(parameters) {
         var self = this;
 
         self.settings = parameters[0];
@@ -15,19 +15,19 @@ $(function() {
 		self.isPrinting = ko.observable(false);
 		self.selectedPlug = ko.observable();
 		self.processing = ko.observableArray([]);
-		
-		self.onBeforeBinding = function() {		
-			self.arrSmartplugs(self.settings.settings.plugins.tplinksmartplug.arrSmartplugs());
+
+		self.onBeforeBinding = function() {
+			self.arrSmartplugs(self.settings.settings.plugins.tuyasmartplug.arrSmartplugs());
         }
-		
+
 		self.onAfterBinding = function() {
 			self.checkStatuses();
 		}
 
         self.onEventSettingsUpdated = function(payload) {
-			self.arrSmartplugs(self.settings.settings.plugins.tplinksmartplug.arrSmartplugs());
+			self.arrSmartplugs(self.settings.settings.plugins.tuyasmartplug.arrSmartplugs());
 		}
-		
+
 		self.onEventPrinterStateChanged = function(payload) {
 			if (payload.state_id == "PRINTING" || payload.state_id == "PAUSED"){
 				self.isPrinting(true);
@@ -35,18 +35,20 @@ $(function() {
 				self.isPrinting(false);
 			}
 		}
-		
+
 		self.cancelClick = function(data) {
 			self.processing.remove(data.ip());
 		}
-		
+
 		self.editPlug = function(data) {
 			self.selectedPlug(data);
-			$("#TPLinkPlugEditor").modal("show");
+			$("#TuyaPlugEditor").modal("show");
 		}
-		
+
 		self.addPlug = function() {
 			self.selectedPlug({'ip':ko.observable(''),
+                                    'id':ko.observable(''),
+                                    'localKey':ko.observable(''),
 									'label':ko.observable(''),
 									'icon':ko.observable('icon-bolt'),
 									'displayWarning':ko.observable(true),
@@ -69,23 +71,23 @@ $(function() {
 									'useCountdownRules':ko.observable(false),
 									'countdownOnDelay':ko.observable(0),
 									'countdownOffDelay':ko.observable(0)});
-			self.settings.settings.plugins.tplinksmartplug.arrSmartplugs.push(self.selectedPlug());
-			$("#TPLinkPlugEditor").modal("show");
+			self.settings.settings.plugins.tuyasmartplug.arrSmartplugs.push(self.selectedPlug());
+			$("#TuyaPlugEditor").modal("show");
 		}
-		
+
 		self.removePlug = function(row) {
-			self.settings.settings.plugins.tplinksmartplug.arrSmartplugs.remove(row);
+			self.settings.settings.plugins.tuyasmartplug.arrSmartplugs.remove(row);
 		}
-		
+
 		self.onDataUpdaterPluginMessage = function(plugin, data) {
-            if (plugin != "tplinksmartplug") {
+            if (plugin != "tuyasmartplug") {
                 return;
             }
-			
-			plug = ko.utils.arrayFirst(self.settings.settings.plugins.tplinksmartplug.arrSmartplugs(),function(item){
+
+			plug = ko.utils.arrayFirst(self.settings.settings.plugins.tuyasmartplug.arrSmartplugs(),function(item){
 				return item.ip() === data.ip;
 				}) || {'ip':data.ip,'currentState':'unknown','btnColor':'#808080'};
-			
+
 			if (plug.currentState != data.currentState) {
 				plug.currentState(data.currentState)
 				switch(data.currentState) {
@@ -95,8 +97,8 @@ $(function() {
 						break;
 					default:
 						new PNotify({
-							title: 'TP-Link Smartplug Error',
-							text: 'Status ' + plug.currentState() + ' for ' + plug.ip() + '. Double check IP Address\\Hostname in TPLinkSmartplug Settings.',
+							title: 'Tuya Smartplug Error',
+							text: 'Status ' + plug.currentState() + ' for ' + plug.ip() + '. Double check IP Address\\Hostname in tuyasmartplug Settings.',
 							type: 'error',
 							hide: true
 							});
@@ -105,7 +107,7 @@ $(function() {
 			}
 			self.processing.remove(data.ip);
         };
-		
+
 		self.toggleRelay = function(data) {
 			self.processing.push(data.ip());
 			switch(data.currentState()){
@@ -119,17 +121,17 @@ $(function() {
 					self.checkStatus(data.ip());
 			}
 		}
-		
+
 		self.turnOn = function(data) {
 /* 			if(data.sysCmdOn()){
 				setTimeout(function(){self.sysCommand(data.sysRunCmdOn())},data.sysCmdOnDelay()*1000);
 			} */
 			self.sendTurnOn(data);
 		}
-		
+
 		self.sendTurnOn = function(data) {
             $.ajax({
-                url: API_BASEURL + "plugin/tplinksmartplug",
+                url: API_BASEURL + "plugin/tuyasmartplug",
                 type: "POST",
                 dataType: "json",
                 data: JSON.stringify({
@@ -141,21 +143,21 @@ $(function() {
         };
 
     	self.turnOff = function(data) {
-			if((data.displayWarning() || (self.isPrinting() && data.warnPrinting())) && !$("#TPLinkSmartPlugWarning").is(':visible')){
+			if((data.displayWarning() || (self.isPrinting() && data.warnPrinting())) && !$("#tuyasmartplugWarning").is(':visible')){
 				self.selectedPlug(data);
-				$("#TPLinkSmartPlugWarning").modal("show");
+				$("#tuyasmartplugWarning").modal("show");
 			} else {
-				$("#TPLinkSmartPlugWarning").modal("hide");
+				$("#tuyasmartplugWarning").modal("hide");
 /* 				if(data.sysCmdOff()){
 					setTimeout(function(){self.sysCommand(data.sysRunCmdOff())},data.sysCmdOffDelay()*1000);
 				} */
 				self.sendTurnOff(data);
 			}
-        }; 
-		
+        };
+
 		self.sendTurnOff = function(data) {
 			$.ajax({
-			url: API_BASEURL + "plugin/tplinksmartplug",
+			url: API_BASEURL + "plugin/tuyasmartplug",
 			type: "POST",
 			dataType: "json",
 			data: JSON.stringify({
@@ -163,12 +165,12 @@ $(function() {
 				ip: data.ip()
 			}),
 			contentType: "application/json; charset=UTF-8"
-			});		
+			});
 		}
-		
+
 		self.checkStatus = function(plugIP) {
             $.ajax({
-                url: API_BASEURL + "plugin/tplinksmartplug",
+                url: API_BASEURL + "plugin/tuyasmartplug",
                 type: "POST",
                 dataType: "json",
                 data: JSON.stringify({
@@ -179,35 +181,35 @@ $(function() {
             }).done(function(){
 				self.settings.saveData();
 				});
-        }; 
-		
+        };
+
 		self.disconnectPrinter = function() {
             $.ajax({
-                url: API_BASEURL + "plugin/tplinksmartplug",
+                url: API_BASEURL + "plugin/tuyasmartplug",
                 type: "POST",
                 dataType: "json",
                 data: JSON.stringify({
                     command: "disconnectPrinter"
                 }),
                 contentType: "application/json; charset=UTF-8"
-            });			
+            });
 		}
-		
+
 		self.connectPrinter = function() {
             $.ajax({
-                url: API_BASEURL + "plugin/tplinksmartplug",
+                url: API_BASEURL + "plugin/tuyasmartplug",
                 type: "POST",
                 dataType: "json",
                 data: JSON.stringify({
                     command: "connectPrinter"
                 }),
                 contentType: "application/json; charset=UTF-8"
-            });			
+            });
 		}
-		
+
 /* 		self.sysCommand = function(sysCmd) {
             $.ajax({
-                url: API_BASEURL + "plugin/tplinksmartplug",
+                url: API_BASEURL + "plugin/tuyasmartplug",
                 type: "POST",
                 dataType: "json",
                 data: JSON.stringify({
@@ -215,30 +217,30 @@ $(function() {
 					cmd: sysCmd
                 }),
                 contentType: "application/json; charset=UTF-8"
-            });			
+            });
 		} */
-		
+
 		self.checkStatuses = function() {
-			ko.utils.arrayForEach(self.settings.settings.plugins.tplinksmartplug.arrSmartplugs(),function(item){
+			ko.utils.arrayForEach(self.settings.settings.plugins.tuyasmartplug.arrSmartplugs(),function(item){
 				if(item.ip() !== "") {
 					console.log("checking " + item.ip())
 					self.checkStatus(item.ip());
 				}
 			});
-			if (self.settings.settings.plugins.tplinksmartplug.pollingEnabled()) {
-				setTimeout(function() {self.checkStatuses();}, (parseInt(self.settings.settings.plugins.tplinksmartplug.pollingInterval(),10) * 60000));
+			if (self.settings.settings.plugins.tuyasmartplug.pollingEnabled()) {
+				setTimeout(function() {self.checkStatuses();}, (parseInt(self.settings.settings.plugins.tuyasmartplug.pollingInterval(),10) * 60000));
 			};
         };
     }
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
-        tplinksmartplugViewModel,
+        tuyasmartplugViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
         ["settingsViewModel","loginStateViewModel"],
 
-        // "#navbar_plugin_tplinksmartplug","#settings_plugin_tplinksmartplug"
-        ["#navbar_plugin_tplinksmartplug","#settings_plugin_tplinksmartplug"]
+        // "#navbar_plugin_tuyasmartplug","#settings_plugin_tuyasmartplug"
+        ["#navbar_plugin_tuyasmartplug","#settings_plugin_tuyasmartplug"]
     ]);
 });
