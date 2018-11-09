@@ -77,6 +77,9 @@ class tuyasmartplugPlugin(octoprint.plugin.SettingsPlugin,
 			pollingEnabled=False
 		)
 
+	def get_settings_restricted_paths(self):
+		return dict(admin=[["arrSmartplugs", ], ])
+
 	def on_settings_save(self, data):
 		old_debug_logging = self._settings.get_boolean(["debug_logging"])
 
