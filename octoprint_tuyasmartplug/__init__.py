@@ -48,6 +48,7 @@ class tuyasmartplugPlugin(octoprint.plugin.SettingsPlugin,
 				{
 					'ip': '',
 					'id': '',
+					'slot': 1,
 					'localKey': '',
 					'label': '',
 					'icon': 'icon-bolt',
@@ -93,7 +94,7 @@ class tuyasmartplugPlugin(octoprint.plugin.SettingsPlugin,
 				self._tuyasmartplug_logger.setLevel(logging.INFO)
 
 	def get_settings_version(self):
-		return 1
+		return 2
 
 	def on_settings_migrate(self, target, current=None):
 		if current is None or current < self.get_settings_version():
@@ -181,7 +182,9 @@ class tuyasmartplugPlugin(octoprint.plugin.SettingsPlugin,
 	def is_turned_on(self, data=None, plugip=None):
 		if data is None and plugip:
 			data = self.sendCommand('info', plugip)
-		return data and data.get('dps', {}).get('1')
+
+		plug = self.plug_search(self._settings.get(["arrSmartplugs"]), "ip", plugip)
+		return data and data.get('dps', {}).get(plug['slot'])
 
 	def get_api_commands(self):
 		return dict(turnOn=["ip"], turnOff=["ip"], checkStatus=["ip"])
@@ -212,8 +215,8 @@ class tuyasmartplugPlugin(octoprint.plugin.SettingsPlugin,
 
 		commands = {
 			'info': ('status', None),
-			'on': ('set_status', True),
-			'off': ('set_status', False),
+			'on': ('set_status', (True, plug['slot'])),
+			'off': ('set_status', (False, plug['slot'])),
 			'countdown': ('set_timer', None),
 		}
 
@@ -226,7 +229,10 @@ class tuyasmartplugPlugin(octoprint.plugin.SettingsPlugin,
 			if args:
 				func(args)
 			elif arg is not None:
-				func(arg)
+				if isinstance(arg, list):
+					func(*arg)
+				else:
+					func(arg)
 			else:
 				func()
 			time.sleep(0.5)
