@@ -39,6 +39,8 @@ Once installed go into settings and enter the ip address for your TP-Link Smartp
   - Plug ID.
 - **Local Key**
   - Local key to cypher data.
+- **Plug Slot**
+  - In case you have multiple slot, you can specify which one to interact with.
 - **Warning Prompt**
   - Always warn when checked.
 - **Warn While Printing**

@@ -8,7 +8,7 @@
 		</tr>
 	</thead>
 	<tbody data-bind="foreach: settings.settings.plugins.tuyasmartplug.arrSmartplugs">
-		<tr data-bind="attr: {title: ip}">
+		<tr data-bind="attr: {title: label}">
 			<td><span data-bind="text: label" /></td>
 			<td style="text-align:center">
 				<i class="icon" data-bind="css: {'icon-check': displayWarning(),'icon-check-empty': !displayWarning()}" title="Warning Prompt" />

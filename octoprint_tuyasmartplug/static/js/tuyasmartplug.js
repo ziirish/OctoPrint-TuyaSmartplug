@@ -37,7 +37,7 @@ $(function() {
 		}
 
 		self.cancelClick = function(data) {
-			self.processing.remove(data.ip());
+			self.processing.remove(data.label());
 		}
 
 		self.editPlug = function(data) {
@@ -48,7 +48,7 @@ $(function() {
 		self.addPlug = function() {
 			self.selectedPlug({'ip':ko.observable(''),
                                     'id':ko.observable(''),
-                                    'slot':ko.observable(''),
+                                    'slot':ko.observable(1),
                                     'localKey':ko.observable(''),
 									'label':ko.observable(''),
 									'icon':ko.observable('icon-bolt'),
@@ -86,8 +86,8 @@ $(function() {
             }
 
 			plug = ko.utils.arrayFirst(self.settings.settings.plugins.tuyasmartplug.arrSmartplugs(),function(item){
-				return item.ip() === data.ip;
-				}) || {'ip':data.ip,'currentState':'unknown','btnColor':'#808080'};
+				return item.label() === data.label;
+				}) || {'label':data.label,'currentState':'unknown','btnColor':'#808080'};
 
 			if (plug.currentState != data.currentState) {
 				plug.currentState(data.currentState)
@@ -106,11 +106,11 @@ $(function() {
 				self.settings.saveData();
 				}
 			}
-			self.processing.remove(data.ip);
+			self.processing.remove(data.label);
         };
 
 		self.toggleRelay = function(data) {
-			self.processing.push(data.ip());
+			self.processing.push(data.label());
 			switch(data.currentState()){
 				case "on":
 					self.turnOff(data);
@@ -119,7 +119,7 @@ $(function() {
 					self.turnOn(data);
 					break;
 				default:
-					self.checkStatus(data.ip());
+					self.checkStatus(data.label());
 			}
 		}
 
@@ -137,7 +137,7 @@ $(function() {
                 dataType: "json",
                 data: JSON.stringify({
                     command: "turnOn",
-					ip: data.ip()
+					label: data.label()
                 }),
                 contentType: "application/json; charset=UTF-8"
             });
@@ -163,20 +163,20 @@ $(function() {
 			dataType: "json",
 			data: JSON.stringify({
 				command: "turnOff",
-				ip: data.ip()
+				label: data.label()
 			}),
 			contentType: "application/json; charset=UTF-8"
 			});
 		}
 
-		self.checkStatus = function(plugIP) {
+		self.checkStatus = function(plugLabel) {
             $.ajax({
                 url: API_BASEURL + "plugin/tuyasmartplug",
                 type: "POST",
                 dataType: "json",
                 data: JSON.stringify({
                     command: "checkStatus",
-					ip: plugIP
+					label: plugLabel
                 }),
                 contentType: "application/json; charset=UTF-8"
             }).done(function(){
@@ -223,9 +223,9 @@ $(function() {
 
 		self.checkStatuses = function() {
 			ko.utils.arrayForEach(self.settings.settings.plugins.tuyasmartplug.arrSmartplugs(),function(item){
-				if(item.ip() !== "") {
-					console.log("checking " + item.ip())
-					self.checkStatus(item.ip());
+				if(item.label() !== "") {
+					console.log("checking " + item.label())
+					self.checkStatus(item.label());
 				}
 			});
 			if (self.settings.settings.plugins.tuyasmartplug.pollingEnabled()) {
