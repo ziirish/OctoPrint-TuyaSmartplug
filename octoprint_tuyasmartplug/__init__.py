@@ -177,14 +177,14 @@ class tuyasmartplugPlugin(octoprint.plugin.SettingsPlugin,
 			if response is False:
 				self._plugin_manager.send_plugin_message(self._identifier, dict(currentState="unknown", label=pluglabel))
 			else:
-				self._plugin_manager.send_plugin_message(self._identifier, dict(currentState=("on" if self.is_turned_on(response) else "off"), label=pluglabel))
+				self._plugin_manager.send_plugin_message(self._identifier, dict(currentState=("on" if self.is_turned_on(response, pluglabel) else "off"), label=pluglabel))
 
 	def is_turned_on(self, data=None, pluglabel=None):
 		if data is None and pluglabel:
 			data = self.sendCommand('info', pluglabel)
 
 		plug = self.plug_search(self._settings.get(["arrSmartplugs"]), "label", pluglabel)
-		return data and data.get('dps', {}).get(str(plug['slot']))
+		return data and plug and data.get('dps', {}).get(str(plug['slot']))
 
 	def get_api_commands(self):
 		return dict(turnOn=["label"], turnOff=["label"], checkStatus=["label"])
