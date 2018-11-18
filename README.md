@@ -32,7 +32,7 @@ Once installed go into settings and enter the ip address for your TP-Link Smartp
 - **IP**
   - IP or hostname of the plug to control.
 - **Label**
-  - Label to use for title attribute on hover over button in navbar.
+  - Label to use for title attribute on hover over button in navbar. Please note this settings is mandatory and should be unique across your plugs.
 - **Icon Class**
   - Class name from [fontawesome](http://fontawesome.io/3.2.1/cheatsheet/) to use for icon on button.
 - **Device ID**
