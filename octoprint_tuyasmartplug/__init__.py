@@ -55,6 +55,7 @@ class tuyasmartplugPlugin(octoprint.plugin.SettingsPlugin,
 					'displayWarning': True,
 					'warnPrinting': False,
 					'gcodeEnabled': False,
+					'v33': False,
 					'gcodeOnDelay': 0,
 					'gcodeOffDelay': 0,
 					'autoConnect': True,
@@ -94,7 +95,7 @@ class tuyasmartplugPlugin(octoprint.plugin.SettingsPlugin,
 				self._tuyasmartplug_logger.setLevel(logging.INFO)
 
 	def get_settings_version(self):
-		return 2
+		return 3
 
 	def on_settings_migrate(self, target, current=None):
 		if current is None or current < self.get_settings_version():
@@ -212,6 +213,8 @@ class tuyasmartplugPlugin(octoprint.plugin.SettingsPlugin,
 		self._tuyasmartplug_logger.debug('Sending command: %s to %s' % (cmd, pluglabel))
 		plug = self.plug_search(self._settings.get(["arrSmartplugs"]), "label", pluglabel)
 		device = pytuya.OutletDevice(plug['id'], plug['ip'], plug['localKey'])
+		if plug.get('v33'):
+			device.version = 3.3
 
 		commands = {
 			'info': ('status', None),

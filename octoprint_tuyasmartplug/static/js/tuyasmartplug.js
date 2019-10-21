@@ -47,12 +47,13 @@ $(function() {
 
 		self.addPlug = function() {
 			self.selectedPlug({'ip':ko.observable(''),
-                                    'id':ko.observable(''),
-                                    'slot':ko.observable(1),
-                                    'localKey':ko.observable(''),
+									'id':ko.observable(''),
+									'slot':ko.observable(1),
+									'localKey':ko.observable(''),
 									'label':ko.observable(''),
 									'icon':ko.observable('icon-bolt'),
 									'displayWarning':ko.observable(true),
+									'v33':ko.observable(false),
 									'warnPrinting':ko.observable(false),
 									'gcodeEnabled':ko.observable(false),
 									'gcodeOnDelay':ko.observable(0),
