@@ -10,7 +10,8 @@ import os
 import re
 import threading
 import time
-import pytuya
+
+from octoprint_tuyasmartplug.utils import pytuya
 
 
 class tuyasmartplugPlugin(
