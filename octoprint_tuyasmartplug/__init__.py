@@ -153,7 +153,9 @@ class tuyasmartplugPlugin(
         )
         self._tuyasmartplug_logger.debug(plug)
         if plug["useCountdownRules"]:
-            chk = self.sendCommand("countdown", plug["label"], plug["countdownOnDelay"])
+            chk = self.sendCommand(
+                "countdown", plug["label"], int(plug["countdownOnDelay"])
+            )
         else:
             chk = self.sendCommand("on", plug["label"])
 
@@ -188,7 +190,7 @@ class tuyasmartplugPlugin(
         self._tuyasmartplug_logger.debug(plug)
         if plug["useCountdownRules"]:
             chk = self.sendCommand(
-                "countdown", plug["label"], plug["countdownOffDelay"]
+                "countdown", plug["label"], int(plug["countdownOffDelay"])
             )
 
         if plug["sysCmdOff"]:
