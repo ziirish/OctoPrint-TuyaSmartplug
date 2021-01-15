@@ -232,6 +232,22 @@ class tuyasmartplugPlugin(
                     ),
                 )
 
+    def check_statusRet(self, pluglabel, resp=None):
+        self._tuyasmartplug_logger.debug("Checking status of %s." % pluglabel)
+        if pluglabel != "":
+            response = resp or self.sendCommand("info", pluglabel)
+            if response is False:
+                ret = dict(currentState="unknown", label=pluglabel)
+            else:
+                ret = dict(
+                        currentState=(
+                            "on" if self.is_turned_on(response, pluglabel) else "off"
+                        ),
+                        label=pluglabel,
+                    )
+            self._plugin_manager.send_plugin_message(self._identifier, ret)
+            return ret
+
     def is_turned_on(self, data=None, pluglabel=None):
         if data is None and pluglabel:
             data = self.sendCommand("info", pluglabel)
@@ -242,7 +258,7 @@ class tuyasmartplugPlugin(
         return data and plug and data.get("dps", {}).get(str(plug["slot"]))
 
     def get_api_commands(self):
-        return dict(turnOn=["label"], turnOff=["label"], checkStatus=["label"])
+        return dict(turnOn=["label"], turnOff=["label"], checkStatus=["label"], checkStatusRet=["label"])
 
     def on_api_command(self, command, data):
         if not user_permission.can():
@@ -256,7 +272,9 @@ class tuyasmartplugPlugin(
             self.turn_off("{label}".format(**data))
         elif command == "checkStatus":
             self.check_status("{label}".format(**data))
-
+        elif command == "checkStatusRet":
+            ret = self.check_statusRet("{label}".format(**data))
+            return ret
     # ~~ Utilities
 
     def plug_search(self, lst, key, value):
