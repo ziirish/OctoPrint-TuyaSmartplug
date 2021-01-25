@@ -148,7 +148,7 @@ class tuyasmartplugPlugin(
             self._plugin_manager.send_plugin_message(
                 self._identifier, dict(currentState="on", label=pluglabel)
             )
-            return
+            return dict(currentState="on", label=pluglabel)
         plug = self.plug_search(
             self._settings.get(["arrSmartplugs"]), "label", pluglabel
         )
@@ -172,10 +172,12 @@ class tuyasmartplugPlugin(
                     int(plug["sysCmdOnDelay"]), os.system, args=[plug["sysRunCmdOn"]]
                 )
                 t.start()
+            return dict(currentState="on", label=pluglabel)
         else:
             self._plugin_manager.send_plugin_message(
                 self._identifier, dict(currentState="unknown", label=pluglabel)
             )
+            return dict(currentState="unknown", label=pluglabel)
 
     def turn_off(self, pluglabel):
         self._tuyasmartplug_logger.debug("Turning off %s." % pluglabel)
@@ -184,7 +186,7 @@ class tuyasmartplugPlugin(
             self._plugin_manager.send_plugin_message(
                 self._identifier, dict(currentState="off", label=pluglabel)
             )
-            return
+            return  dict(currentState="off", label=pluglabel)
         plug = self.plug_search(
             self._settings.get(["arrSmartplugs"]), "label", pluglabel
         )
@@ -208,10 +210,12 @@ class tuyasmartplugPlugin(
 
         if chk is not False:
             self.check_status(plug["label"], chk)
+            return  dict(currentState="off", label=pluglabel)
         else:
             self._plugin_manager.send_plugin_message(
                 self._identifier, dict(currentState="unknown", label=pluglabel)
             )
+            return  dict(currentState="unknown", label=pluglabel)
 
     def check_status(self, pluglabel, resp=None):
         self._tuyasmartplug_logger.debug("Checking status of %s." % pluglabel)
@@ -258,7 +262,7 @@ class tuyasmartplugPlugin(
         return data and plug and data.get("dps", {}).get(str(plug["slot"]))
 
     def get_api_commands(self):
-        return dict(turnOn=["label"], turnOff=["label"], checkStatus=["label"], checkStatusRet=["label"])
+        return dict(turnOn=["label"], turnOff=["label"], checkStatus=["label"], checkStatusRet=["label"], getListPlug=["label"])
 
     def on_api_command(self, command, data):
         if not user_permission.can():
@@ -275,6 +279,8 @@ class tuyasmartplugPlugin(
         elif command == "checkStatusRet":
             ret = self.check_statusRet("{label}".format(**data))
             return ret
+        elif command == "getListPlug":
+            return json.dumps(self._settings.get(["arrSmartplugs"]))
     # ~~ Utilities
 
     def plug_search(self, lst, key, value):
