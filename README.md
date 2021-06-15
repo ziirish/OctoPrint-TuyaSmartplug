@@ -1,6 +1,6 @@
 # OctoPrint-TuyaSmartplug
 
-Work based on [OctoPrint-TPLinkSmartplug](https://github.com/jneilliii/OctoPrint-TPLinkSmartplug) and [python-tuya](https://github.com/clach04/python-tuya).
+Work based on [OctoPrint-TPLinkSmartplug](https://github.com/jneilliii/OctoPrint-TPLinkSmartplug) and [tuyapy](https://pypi.org/project/tuyapy/).
 This plugin controlls [Tuya-based](https://en.tuya.com/) SmartPlugs.
 
 ##  Screenshots

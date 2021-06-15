@@ -10,6 +10,7 @@ import os
 import re
 import threading
 import time
+import tuyapy
 
 from octoprint_tuyasmartplug.utils import pytuya
 
@@ -26,6 +27,7 @@ class tuyasmartplugPlugin(
         self._tuyasmartplug_logger = logging.getLogger(
             "octoprint.plugins.tuyasmartplug.debug"
         )
+		self.tuyapi = tuyapy.TuyaApi()
 
     # ~~ StartupPlugin mixin
 
@@ -50,6 +52,15 @@ class tuyasmartplugPlugin(
             else logging.INFO
         )
         self._tuyasmartplug_logger.propagate = False
+		username = self._settings.get(["username"])
+		password = self._settings.get(["password"])
+		country_code = self._settings.get(["country_code"])
+		self.tuyapi.init(
+			username=username,
+			password=password,
+			countrycode=country_code,
+			bizType="tuya"
+		)
 
     def on_after_startup(self):
         self._logger.info("TuyaSmartplug loaded!")
@@ -59,18 +70,16 @@ class tuyasmartplugPlugin(
     def get_settings_defaults(self):
         return dict(
             debug_logging=False,
+			username="",
+			password="",
+			country_code="1",
             arrSmartplugs=[
                 {
-                    "ip": "",
-                    "id": "",
-                    "slot": 1,
-                    "localKey": "",
                     "label": "",
                     "icon": "icon-bolt",
                     "displayWarning": True,
                     "warnPrinting": False,
                     "gcodeEnabled": False,
-                    "v33": False,
                     "gcodeOnDelay": 0,
                     "gcodeOffDelay": 0,
                     "autoConnect": True,
@@ -116,7 +125,7 @@ class tuyasmartplugPlugin(
                 self._tuyasmartplug_logger.setLevel(logging.INFO)
 
     def get_settings_version(self):
-        return 3
+        return 4
 
     def on_settings_migrate(self, target, current=None):
         if current is None or current < self.get_settings_version():
@@ -269,45 +278,36 @@ class tuyasmartplugPlugin(
         plug = self.plug_search(
             self._settings.get(["arrSmartplugs"]), "label", pluglabel
         )
-        device = pytuya.OutletDevice(plug["id"], plug["ip"], plug["localKey"])
-        if plug.get("v33"):
-            device.version = 3.3
+		for dev in self.tuyapi.get_all_devices():
+			if dev.get_name() == pluglabel:
+				device = dev
+				break
+		else:
+			return False
 
         commands = {
-            "info": ("status", None),
-            "on": ("set_status", True),
-            "off": ("set_status", False),
+            "info": ("state", None),
+            "on": ("turn_on", None),
+            "off": ("turn_off", None),
             "countdown": ("set_timer", None),
         }
 
-        try:
-            command, arg = commands[cmd]
-            func = getattr(device, command, None)
-            if not func:
-                self._tuyasmartplug_logger.debug("No such command '%s'" % command)
-                return False
-            if args:
-                func(args)
-            elif arg is not None:
-                func(arg, plug["slot"])
-            else:
-                func()
-            time.sleep(0.5)
-            ret = device.status()
-            self._tuyasmartplug_logger.debug("Status: %s" % str(ret))
-            return ret
-        except socket.error as e:
-            if e.errno == 104:
-                if tries <= 3:
-                    self._tuyasmartplug_logger.debug(
-                        "Connection refused... Trying again soon"
-                    )
-                    time.sleep(1)
-                    return self.sendCommand(cmd, pluglabel, args, tries + 1)
-                self._tuyasmartplug_logger.debug("Too many failed attempts")
-                return False
-            self._tuyasmartplug_logger.debug("Network error")
-            return False
+		try:
+			command, arg = commands[cmd]
+			func = getattr(device, command, None)
+			if not func:
+				self._tuyasmartplug_logger.debug("No such command '%s'" % command)
+				return False
+			if args:
+				func(args)
+			elif arg is not None:
+				func(arg, plug["slot"])
+			else:
+				func()
+			time.sleep(0.5)
+			ret = device.state()
+			self._tuyasmartplug_logger.debug("Status: %s" % str(ret))
+			return ret
         except:
             self._tuyasmartplug_logger.debug(
                 "Something went wrong while running the command"
@@ -331,13 +331,9 @@ class tuyasmartplugPlugin(
                 self._tuyasmartplug_logger.debug(
                     "Received M80 command, attempting power on of %s." % name
                 )
-                plug = self.plug_search(
-                    self._settings.get(["arrSmartplugs"]), "ip", name
-                )
-                if not plug:
-                    plug = self.plug_search(
-                        self._settings.get(["arrSmartplugs"]), "label", name
-                    )
+				plug = self.plug_search(
+					self._settings.get(["arrSmartplugs"]), "label", name
+				)
                 self._tuyasmartplug_logger.debug(plug)
                 if plug["gcodeEnabled"]:
                     t = threading.Timer(
@@ -350,13 +346,9 @@ class tuyasmartplugPlugin(
                 self._tuyasmartplug_logger.debug(
                     "Received M81 command, attempting power off of %s." % name
                 )
-                plug = self.plug_search(
-                    self._settings.get(["arrSmartplugs"]), "ip", name
-                )
-                if not plug:
-                    plug = self.plug_search(
-                        self._settings.get(["arrSmartplugs"]), "label", name
-                    )
+				plug = self.plug_search(
+					self._settings.get(["arrSmartplugs"]), "label", name
+				)
                 self._tuyasmartplug_logger.debug(plug)
                 if plug["gcodeEnabled"]:
                     t = threading.Timer(
@@ -372,11 +364,9 @@ class tuyasmartplugPlugin(
             self._tuyasmartplug_logger.debug(
                 "Received @TUYAON command, attempting power on of %s." % name
             )
-            plug = self.plug_search(self._settings.get(["arrSmartplugs"]), "ip", name)
-            if not plug:
-                plug = self.plug_search(
-                    self._settings.get(["arrSmartplugs"]), "label", name
-                )
+			plug = self.plug_search(
+				self._settings.get(["arrSmartplugs"]), "label", name
+			)
             self._tuyasmartplug_logger.debug(plug)
             if plug["gcodeEnabled"]:
                 t = threading.Timer(
@@ -389,11 +379,9 @@ class tuyasmartplugPlugin(
             self._tuyasmartplug_logger.debug(
                 "Received TUYAOFF command, attempting power off of %s." % name
             )
-            plug = self.plug_search(self._settings.get(["arrSmartplugs"]), "ip", name)
-            if not plug:
-                plug = self.plug_search(
-                    self._settings.get(["arrSmartplugs"]), "label", name
-                )
+			plug = self.plug_search(
+				self._settings.get(["arrSmartplugs"]), "label", name
+			)
             self._tuyasmartplug_logger.debug(plug)
             if plug["gcodeEnabled"]:
                 t = threading.Timer(
@@ -427,7 +415,7 @@ class tuyasmartplugPlugin(
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
 __plugin_name__ = "Tuya Smartplug"
-__plugin_version__ = "0.3.0"
+__plugin_version__ = "0.4.0"
 __plugin_pythoncompat__ = ">=2.7,<4"
 
 

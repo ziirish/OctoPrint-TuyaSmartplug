@@ -11,7 +11,6 @@
 		<tr data-bind="attr: {title: label}">
 			<td><span data-bind="text: label" /></td>
 			<td style="text-align:center">
-				<i class="icon" data-bind="css: {'icon-check': v33(),'icon-check-empty': !v33()}" title="Version 3.3" />
 				<i class="icon" data-bind="css: {'icon-check': displayWarning(),'icon-check-empty': !displayWarning()}" title="Warning Prompt" />
 				<i class="icon" data-bind="css: {'icon-check': warnPrinting(),'icon-check-empty': !warnPrinting()}" title="Warn While Printing" />
 				<i class="icon" data-bind="css: {'icon-check': autoConnect(),'icon-check-empty': !autoConnect()}" title="Auto Connect" />
@@ -29,6 +28,24 @@
 	</tbody>
 </table>
 
+<div class="control-group">
+	<div class="controls">
+		<label class="control-label">{{ _('Username') }}</label>
+		<input type="text" data-bind="value: settings.settings.plugins.tuyasmartplug.username" required/>
+	</div>
+</div>
+<div class="control-group">
+	<div class="controls">
+		<label class="control-label">{{ _('Password') }}</label>
+		<input type="password" data-bind="value: settings.settings.plugins.tuyasmartplug.password" required/>
+	</div>
+</div>
+<div class="control-group">
+	<div class="controls">
+		<label class="control-label">{{ _('Country code') }}</label>
+		<input type="number" min="0" data-bind="value: settings.settings.plugins.tuyasmartplug.country_code" required/>
+	</div>
+</div>
 <div class="control-group">
 	<div class="controls">
 		<label class="checkbox">
@@ -58,19 +75,12 @@
 	<div class="modal-body">
 		<table class="table table-condensed">
 			<tr>
-				<td><div class="controls"><label class="control-label">{{ _('IP') }}</label><input type="text" class="input-block-level" data-bind="value: ip" /></div></td>
 				<td><div class="controls"><label class="control-label">{{ _('Label') }}</label><input type="text" class="input input-small" data-bind="value: label" required/></div></td>
 				<td><div class="controls"><label class="control-label"><a href="http://fontawesome.io/3.2.1/cheatsheet/" target="_blank">{{ _('Icon Class') }}</a></label><input type="text" class="input-block-level" data-bind="value: icon" /></div></td>
 			</tr>
 			<tr>
-				<td><div class="controls"><label class="control-label">{{ _('Device ID') }}</label><input type="text" class="input-block-level" data-bind="value: id" /></div></td>
-				<td><div class="controls"><label class="control-label">{{ _('Local Key') }}</label><input type="password" clas"input-block-level" data-bind="value: localKey" /></div></td>
-				<td><div class="controls"><label class="control-label">{{ _('Plug Slot') }}</label><input type="text" class="input input-small" data-bind="value: slot" /></div></td>
-			</tr>
-			<tr>
 				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: displayWarning"/> Warning Prompt</label></div></td>
 				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: warnPrinting"/> Warn While Printing</label></div></td>
-				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: v33"/> Version 3.3</label></div></td>
 			</tr>
 			<tr>
 				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: autoConnect"/> Auto Connect</label><input type="text" data-bind="value: autoConnectDelay,visible: autoConnect" class="input input-small" /></div></td>
