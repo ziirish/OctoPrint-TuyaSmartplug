@@ -12,8 +12,6 @@ import threading
 import time
 import tuyapy
 
-from octoprint_tuyasmartplug.utils import pytuya
-
 
 class tuyasmartplugPlugin(
     octoprint.plugin.SettingsPlugin,
