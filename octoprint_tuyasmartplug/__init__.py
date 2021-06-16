@@ -247,10 +247,7 @@ class tuyasmartplugPlugin(
         if data is None and pluglabel:
             data = self.sendCommand("info", pluglabel)
 
-        plug = self.plug_search(
-            self._settings.get(["arrSmartplugs"]), "label", pluglabel
-        )
-        return data and plug and data.get("dps", {}).get(str(plug["slot"]))
+        return data
 
     def get_api_commands(self):
         return dict(turnOn=["label"], turnOff=["label"], checkStatus=["label"])
