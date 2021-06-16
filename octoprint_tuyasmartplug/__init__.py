@@ -25,7 +25,18 @@ class tuyasmartplugPlugin(
         self._tuyasmartplug_logger = logging.getLogger(
             "octoprint.plugins.tuyasmartplug.debug"
         )
-		self.tuyapi = tuyapy.TuyaApi()
+        self.tuyapi = tuyapy.TuyaApi()
+
+    def init(self):
+        username = self._settings.get(["username"])
+        password = self._settings.get(["password"])
+        country_code = self._settings.get(["country_code"])
+        self.tuyapi.init(
+            username=username,
+            password=password,
+            countrycode=country_code,
+            bizType="tuya"
+        )
 
     # ~~ StartupPlugin mixin
 
@@ -50,15 +61,7 @@ class tuyasmartplugPlugin(
             else logging.INFO
         )
         self._tuyasmartplug_logger.propagate = False
-		username = self._settings.get(["username"])
-		password = self._settings.get(["password"])
-		country_code = self._settings.get(["country_code"])
-		self.tuyapi.init(
-			username=username,
-			password=password,
-			countrycode=country_code,
-			bizType="tuya"
-		)
+        self.init()
 
     def on_after_startup(self):
         self._logger.info("TuyaSmartplug loaded!")
@@ -68,9 +71,9 @@ class tuyasmartplugPlugin(
     def get_settings_defaults(self):
         return dict(
             debug_logging=False,
-			username="",
-			password="",
-			country_code="1",
+            username="",
+            password="",
+            country_code="1",
             arrSmartplugs=[
                 {
                     "label": "",
@@ -121,6 +124,7 @@ class tuyasmartplugPlugin(
                 self._tuyasmartplug_logger.setLevel(logging.DEBUG)
             else:
                 self._tuyasmartplug_logger.setLevel(logging.INFO)
+        self.init()
 
     def get_settings_version(self):
         return 4
@@ -276,12 +280,12 @@ class tuyasmartplugPlugin(
         plug = self.plug_search(
             self._settings.get(["arrSmartplugs"]), "label", pluglabel
         )
-		for dev in self.tuyapi.get_all_devices():
-			if dev.get_name() == pluglabel:
-				device = dev
-				break
-		else:
-			return False
+        for dev in self.tuyapi.get_all_devices():
+            if dev.get_name() == pluglabel:
+                device = dev
+                break
+        else:
+            return False
 
         commands = {
             "info": ("state", None),
@@ -290,22 +294,22 @@ class tuyasmartplugPlugin(
             "countdown": ("set_timer", None),
         }
 
-		try:
-			command, arg = commands[cmd]
-			func = getattr(device, command, None)
-			if not func:
-				self._tuyasmartplug_logger.debug("No such command '%s'" % command)
-				return False
-			if args:
-				func(args)
-			elif arg is not None:
-				func(arg, plug["slot"])
-			else:
-				func()
-			time.sleep(0.5)
-			ret = device.state()
-			self._tuyasmartplug_logger.debug("Status: %s" % str(ret))
-			return ret
+        try:
+            command, arg = commands[cmd]
+            func = getattr(device, command, None)
+            if not func:
+                self._tuyasmartplug_logger.debug("No such command '%s'" % command)
+                return False
+            if args:
+                func(args)
+            elif arg is not None:
+                func(arg, plug["slot"])
+            else:
+                func()
+            time.sleep(0.5)
+            ret = device.state()
+            self._tuyasmartplug_logger.debug("Status: %s" % str(ret))
+            return ret
         except:
             self._tuyasmartplug_logger.debug(
                 "Something went wrong while running the command"
@@ -329,9 +333,9 @@ class tuyasmartplugPlugin(
                 self._tuyasmartplug_logger.debug(
                     "Received M80 command, attempting power on of %s." % name
                 )
-				plug = self.plug_search(
-					self._settings.get(["arrSmartplugs"]), "label", name
-				)
+                plug = self.plug_search(
+                   self._settings.get(["arrSmartplugs"]), "label", name
+                )
                 self._tuyasmartplug_logger.debug(plug)
                 if plug["gcodeEnabled"]:
                     t = threading.Timer(
@@ -344,9 +348,9 @@ class tuyasmartplugPlugin(
                 self._tuyasmartplug_logger.debug(
                     "Received M81 command, attempting power off of %s." % name
                 )
-				plug = self.plug_search(
-					self._settings.get(["arrSmartplugs"]), "label", name
-				)
+                plug = self.plug_search(
+                    self._settings.get(["arrSmartplugs"]), "label", name
+                )
                 self._tuyasmartplug_logger.debug(plug)
                 if plug["gcodeEnabled"]:
                     t = threading.Timer(
@@ -362,9 +366,9 @@ class tuyasmartplugPlugin(
             self._tuyasmartplug_logger.debug(
                 "Received @TUYAON command, attempting power on of %s." % name
             )
-			plug = self.plug_search(
-				self._settings.get(["arrSmartplugs"]), "label", name
-			)
+            plug = self.plug_search(
+                self._settings.get(["arrSmartplugs"]), "label", name
+            )
             self._tuyasmartplug_logger.debug(plug)
             if plug["gcodeEnabled"]:
                 t = threading.Timer(
@@ -377,9 +381,9 @@ class tuyasmartplugPlugin(
             self._tuyasmartplug_logger.debug(
                 "Received TUYAOFF command, attempting power off of %s." % name
             )
-			plug = self.plug_search(
-				self._settings.get(["arrSmartplugs"]), "label", name
-			)
+            plug = self.plug_search(
+                self._settings.get(["arrSmartplugs"]), "label", name
+            )
             self._tuyasmartplug_logger.debug(plug)
             if plug["gcodeEnabled"]:
                 t = threading.Timer(
