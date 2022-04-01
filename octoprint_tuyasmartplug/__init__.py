@@ -10,8 +10,7 @@ import os
 import re
 import threading
 import time
-
-from octoprint_tuyasmartplug.utils import pytuya
+import tinytuya
 
 
 class tuyasmartplugPlugin(
@@ -167,15 +166,17 @@ class tuyasmartplugPlugin(
                     int(plug["autoConnectDelay"]), self._printer.connect
                 )
                 c.start()
-            if plug["sysCmdOn"]:
-                t = threading.Timer(
-                    int(plug["sysCmdOnDelay"]), os.system, args=[plug["sysRunCmdOn"]]
-                )
-                t.start()
-        else:
-            self._plugin_manager.send_plugin_message(
-                self._identifier, dict(currentState="unknown", label=pluglabel)
-            )
+                if plug["sysCmdOn"]:
+                    t = threading.Timer(
+                        int(plug["sysCmdOnDelay"]),
+                        os.system,
+                        args=[plug["sysRunCmdOn"]],
+                    )
+                    t.start()
+                else:
+                    self._plugin_manager.send_plugin_message(
+                        self._identifier, dict(currentState="unknown", label=pluglabel)
+                    )
 
     def turn_off(self, pluglabel):
         self._tuyasmartplug_logger.debug("Turning off %s." % pluglabel)
@@ -199,9 +200,9 @@ class tuyasmartplugPlugin(
                 int(plug["sysCmdOffDelay"]), os.system, args=[plug["sysRunCmdOff"]]
             )
             t.start()
-        if plug["autoDisconnect"]:
-            self._printer.disconnect()
-            time.sleep(int(plug["autoDisconnectDelay"]))
+            if plug["autoDisconnect"]:
+                self._printer.disconnect()
+                time.sleep(int(plug["autoDisconnectDelay"]))
 
         if not plug["useCountdownRules"]:
             chk = self.sendCommand("off", plug["label"])
@@ -217,7 +218,10 @@ class tuyasmartplugPlugin(
         self._tuyasmartplug_logger.debug("Checking status of %s." % pluglabel)
         if pluglabel != "":
             response = resp or self.sendCommand("info", pluglabel)
-            if response is False:
+            if not isinstance(response, dict) or "Error" in response:
+                self._tuyasmartplug_logger.warning(
+                    "Unable to check device status: %s" % response
+                )
                 self._plugin_manager.send_plugin_message(
                     self._identifier, dict(currentState="unknown", label=pluglabel)
                 )
@@ -264,14 +268,14 @@ class tuyasmartplugPlugin(
             if item[key] == value:
                 return item
 
-    def sendCommand(self, cmd, pluglabel, args=None, tries=1):
+    def sendCommand(self, cmd, pluglabel, args=None):
         self._tuyasmartplug_logger.debug("Sending command: %s to %s" % (cmd, pluglabel))
         plug = self.plug_search(
             self._settings.get(["arrSmartplugs"]), "label", pluglabel
         )
-        device = pytuya.OutletDevice(plug["id"], plug["ip"], plug["localKey"])
+        device = tinytuya.OutletDevice(plug["id"], plug["ip"], plug["localKey"])
         if plug.get("v33"):
-            device.version = 3.3
+            device.set_version(3.3)
 
         commands = {
             "info": ("status", None),
@@ -280,39 +284,21 @@ class tuyasmartplugPlugin(
             "countdown": ("set_timer", None),
         }
 
-        try:
-            command, arg = commands[cmd]
-            func = getattr(device, command, None)
-            if not func:
-                self._tuyasmartplug_logger.debug("No such command '%s'" % command)
-                return False
-            if args:
-                func(args)
-            elif arg is not None:
-                func(arg, plug["slot"])
-            else:
-                func()
+        command, arg = commands[cmd]
+        func = getattr(device, command, None)
+        if not func:
+            self._tuyasmartplug_logger.debug("No such command '%s'" % command)
+            return False
+        if args:
+            func(args)
+        elif arg is not None:
+            func(arg, plug["slot"])
+        else:
+            func()
             time.sleep(0.5)
             ret = device.status()
             self._tuyasmartplug_logger.debug("Status: %s" % str(ret))
             return ret
-        except socket.error as e:
-            if e.errno == 104:
-                if tries <= 3:
-                    self._tuyasmartplug_logger.debug(
-                        "Connection refused... Trying again soon"
-                    )
-                    time.sleep(1)
-                    return self.sendCommand(cmd, pluglabel, args, tries + 1)
-                self._tuyasmartplug_logger.debug("Too many failed attempts")
-                return False
-            self._tuyasmartplug_logger.debug("Network error")
-            return False
-        except:
-            self._tuyasmartplug_logger.debug(
-                "Something went wrong while running the command"
-            )
-            return False
 
     # ~~ Gcode processing hook
 
@@ -338,69 +324,87 @@ class tuyasmartplugPlugin(
                     plug = self.plug_search(
                         self._settings.get(["arrSmartplugs"]), "label", name
                     )
-                self._tuyasmartplug_logger.debug(plug)
-                if plug["gcodeEnabled"]:
-                    t = threading.Timer(
-                        int(plug["gcodeOnDelay"]), self.turn_on, args=[plug["label"]]
-                    )
-                    t.start()
-                return
-            elif cmd.startswith("M81"):
-                name = re.sub(r"^M81\s?", "", cmd)
-                self._tuyasmartplug_logger.debug(
-                    "Received M81 command, attempting power off of %s." % name
-                )
-                plug = self.plug_search(
-                    self._settings.get(["arrSmartplugs"]), "ip", name
-                )
-                if not plug:
-                    plug = self.plug_search(
-                        self._settings.get(["arrSmartplugs"]), "label", name
-                    )
-                self._tuyasmartplug_logger.debug(plug)
-                if plug["gcodeEnabled"]:
-                    t = threading.Timer(
-                        int(plug["gcodeOffDelay"]), self.gcode_turn_off, args=[plug]
-                    )
-                    t.start()
-                return
-            else:
-                return
+                    self._tuyasmartplug_logger.debug(plug)
+                    if plug["gcodeEnabled"]:
+                        t = threading.Timer(
+                            int(plug["gcodeOnDelay"]),
+                            self.turn_on,
+                            args=[plug["label"]],
+                        )
+                        t.start()
+                        return
+                    elif cmd.startswith("M81"):
+                        name = re.sub(r"^M81\s?", "", cmd)
+                        self._tuyasmartplug_logger.debug(
+                            "Received M81 command, attempting power off of %s." % name
+                        )
+                        plug = self.plug_search(
+                            self._settings.get(["arrSmartplugs"]), "ip", name
+                        )
+                        if not plug:
+                            plug = self.plug_search(
+                                self._settings.get(["arrSmartplugs"]), "label", name
+                            )
+                            self._tuyasmartplug_logger.debug(plug)
+                            if plug["gcodeEnabled"]:
+                                t = threading.Timer(
+                                    int(plug["gcodeOffDelay"]),
+                                    self.gcode_turn_off,
+                                    args=[plug],
+                                )
+                                t.start()
+                                return
+                            else:
+                                return
 
-        elif cmd.startswith("@TUYAON"):
-            name = re.sub(r"^@TUYAON\s?", "", cmd)
-            self._tuyasmartplug_logger.debug(
-                "Received @TUYAON command, attempting power on of %s." % name
-            )
-            plug = self.plug_search(self._settings.get(["arrSmartplugs"]), "ip", name)
-            if not plug:
-                plug = self.plug_search(
-                    self._settings.get(["arrSmartplugs"]), "label", name
-                )
-            self._tuyasmartplug_logger.debug(plug)
-            if plug["gcodeEnabled"]:
-                t = threading.Timer(
-                    int(plug["gcodeOnDelay"]), self.turn_on, args=[plug["label"]]
-                )
-                t.start()
-            return None
-        elif cmd.startswith("@TUYAOFF"):
-            name = re.sub(r"^@TUYAOFF\s?", "", cmd)
-            self._tuyasmartplug_logger.debug(
-                "Received TUYAOFF command, attempting power off of %s." % name
-            )
-            plug = self.plug_search(self._settings.get(["arrSmartplugs"]), "ip", name)
-            if not plug:
-                plug = self.plug_search(
-                    self._settings.get(["arrSmartplugs"]), "label", name
-                )
-            self._tuyasmartplug_logger.debug(plug)
-            if plug["gcodeEnabled"]:
-                t = threading.Timer(
-                    int(plug["gcodeOffDelay"]), self.gcode_turn_off, args=[plug]
-                )
-                t.start()
-            return None
+                        elif cmd.startswith("@TUYAON"):
+                            name = re.sub(r"^@TUYAON\s?", "", cmd)
+                            self._tuyasmartplug_logger.debug(
+                                "Received @TUYAON command, attempting power on of %s."
+                                % name
+                            )
+                            plug = self.plug_search(
+                                self._settings.get(["arrSmartplugs"]), "ip", name
+                            )
+                            if not plug:
+                                plug = self.plug_search(
+                                    self._settings.get(["arrSmartplugs"]), "label", name
+                                )
+                                self._tuyasmartplug_logger.debug(plug)
+                                if plug["gcodeEnabled"]:
+                                    t = threading.Timer(
+                                        int(plug["gcodeOnDelay"]),
+                                        self.turn_on,
+                                        args=[plug["label"]],
+                                    )
+                                    t.start()
+                                    return None
+                                elif cmd.startswith("@TUYAOFF"):
+                                    name = re.sub(r"^@TUYAOFF\s?", "", cmd)
+                                    self._tuyasmartplug_logger.debug(
+                                        "Received TUYAOFF command, attempting power off of %s."
+                                        % name
+                                    )
+                                    plug = self.plug_search(
+                                        self._settings.get(["arrSmartplugs"]),
+                                        "ip",
+                                        name,
+                                    )
+                                    if not plug:
+                                        plug = self.plug_search(
+                                            self._settings.get(["arrSmartplugs"]),
+                                            "label",
+                                            name,
+                                        )
+                                        self._tuyasmartplug_logger.debug(plug)
+                                        if plug["gcodeEnabled"]:
+                                            t = threading.Timer(
+                                                int(plug["gcodeOffDelay"]),
+                                                self.gcode_turn_off,
+                                                args=[plug],
+                                            )
+                                            t.start()
+                                            return None
 
     # ~~ Softwareupdate hook
 
