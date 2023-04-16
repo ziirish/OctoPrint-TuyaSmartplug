@@ -1,65 +1,37 @@
 # OctoPrint-TuyaSmartplug
 
 Work based on [OctoPrint-TPLinkSmartplug](https://github.com/jneilliii/OctoPrint-TPLinkSmartplug) and [python-tuya](https://github.com/clach04/python-tuya).
-This plugin controlls [Tuya-based](https://en.tuya.com/) SmartPlugs.
 
-##  Screenshots
-![screenshot](screenshot.png)
+With this plugin you'll be able to control [Tuya-based](https://en.tuya.com/) SmartPlugs either directly from Octoprint Web interface or through GCODE commands<br>
+<br>
 
-![screenshot](settings.png)
+## Disclaimer
 
-![screenshot](plugeditor.png)
+Tuya is by far the most difficult IoT plataform that can be used to control devices by third-part software like this plugin, they require very specific information on the devices and change often their IoT Cloud Service.<br>
+Many user have given up on using Tuya devices with OctoPrint because of its difficulty, some changed to other brands, other dug deeper and changed the device firmware or completely changed the device microcontroler, literally soldering a new one.<br>
+If you, like me, only have Tuya devices and doesn't feel confortable on doing firmware flashes or resoldering, this plugin has a place on your OctoPrint instalation and its worth of your time configuring it. <br><br>
+This plugin still needs improvements on the code itself, UI, performance and other elements, so you are more then welcome to open [PullRequests](https://github.com/andrelucca/OctoTuya-SmartPlug/pulls) with code updates/fixes or [Issues](https://github.com/andrelucca/OctoTuya-SmartPlug/issues) regarding what needs to be fixed. <br>
+This is of course a side project of mine that unites two subjects that I like, so if you open a PR, Issue or a Discussion topic I'll answer as soon as I can, don't be angry if it takes more time than you think it should :). 
+
+## How it was tested?
+
+I tested all the plugin features using my Ender 3 V2 (Using original Marlin as Firmware that I configured and compiled) connected to the Octoprint v1.8.7. The Raspberry of my Octoprint is connected on the PSU of the printer, so if I power of the printer using the Tuya outlet it will also power-off the Raspberry (and will do it unsafely if I hadn't shutdown the Pi OS properly).
 
 ## Setup
 
 Install via the bundled [Plugin Manager](https://github.com/foosel/OctoPrint/wiki/Plugin:-Plugin-Manager)
 or manually using this URL:
 
-    https://github.com/ziirish/OctoPrint-TuyaSmartplug/archive/master.zip
+    https://github.com/ziirish/OctoPrint-TuyaSmartplug/archive/main.zip
 
+## Preparatory Work
 
-## Preparatory work
+All Tuya devices requires 2 infos in order to be controled by other software: `Device ID` and `Local Key`<br>
+And this is were the greater difficulty takes place. I made a full guide on how obtain this info in this project [Wiki](https://github.com/ziirish/OctoPrint-TuyaSmartplug/wiki) so make sure you follow it and have this infos before installing an using this plugin.
 
-In order to be able to interact with your Tuya smart plugs, you need to retrieve
-both the `Device ID` and the `Local Key`. You'll find information to get those
-in the [python-tuya wiki](https://github.com/clach04/python-tuya/wiki).
+## Configuration and Settings
 
-## Configuration
-
-Once installed go into settings and enter the ip address for your TP-Link Smartplug device. Adjust additional settings as needed.
-
-## Settings Explained
-- **IP**
-  - IP or hostname of the plug to control.
-- **Label**
-  - Label to use for title attribute on hover over button in navbar. Please note this settings is mandatory and should be unique across your plugs.
-- **Icon Class**
-  - Class name from [fontawesome](http://fontawesome.io/3.2.1/cheatsheet/) to use for icon on button.
-- **Device ID**
-  - Plug ID.
-- **Local Key**
-  - Local key to cypher data.
-- **Plug Slot**
-  - In case you have multiple slot, you can specify which one to interact with.
-- **Warning Prompt**
-  - Always warn when checked.
-- **Warn While Printing**
-  - Will only warn when printer is printing.
-- **Use Countdown Timers**
-  - Uses the plug's built in countdown timer rule to postpone the power on/off by configured delay in seconds.
-- **GCODE Trigger**
-  - When checked this will enable the processing of M80 and M81 commands from gcode to power on/off plug.  Syntax for gcode command is M80/M81 followed by hostname/ip.  For example if your plug is 192.168.1.2 your gcode command would be **M80 192.168.1.2**
-  - You can also use the custom gcode commands `@TUYAON` and `@TUYAOFF` followed by the IP address of the plug.  This option will only work for plugs with GCODE processing enabled.  For example if your plug is 192.168.1.2 your gcode command would be **@TUYAON 192.168.1.2**
-- **Auto Connect**
-  - Automatically connect to printer after plug is powered on.
-  - Will wait for number of seconds configured in **Auto Connect Delay** setting prior to attempting connection to printer.
-- **Auto Disconnect**
-  - Automatically disconnect printer prior to powering off the plug.
-  - Will wait for number of seconds configured in **Auto Disconnect Delay** prior to powering off the plug.
-- **Run System Command After On**
-  - When checked will run system command configured in **System Command On** setting after a delay in seconds configured in **System Command On Delay**.
-- **Run System Command Before Off**
-  - When checked will run system command configured in **System Command Off** setting after a delay in seconds configured in **System Command Off Delay**.
+All details on how to configure the plugin and how to change its settings according to your liking are in this project [Wiki](https://github.com/ziirish/OctoPrint-TuyaSmartplug/wiki)
 
 ## Support jneilliii Efforts
 Most of the code used in this plugin has been written by

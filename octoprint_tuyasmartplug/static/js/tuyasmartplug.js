@@ -100,7 +100,7 @@ $(function() {
 					default:
 						new PNotify({
 							title: 'Tuya Smartplug Error',
-							text: 'Status ' + plug.currentState() + ' for ' + plug.ip() + '. Double check IP Address\\Hostname in tuyasmartplug Settings.',
+							text: 'Status ' + plug.currentState() + ' for ' + plug.ip() + '. Double check IP Address\\Device ID\\Local Key in Octoprint-TuyaSmartplug Settings.',
 							type: 'error',
 							hide: true
 							});
