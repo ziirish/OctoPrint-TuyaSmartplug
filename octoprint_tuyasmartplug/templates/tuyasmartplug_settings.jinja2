@@ -54,36 +54,55 @@
 	<div class="modal-header">
 		<a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
 		<h3>Tuya Smartplug Editor</h3>
+		<h5>Check the plugin <a href="https://github.com/ziirish/OctoPrint-TuyaSmartplug/wiki/Plugin-Configurations-and-Settings#device-settings-screen" target="_blank">Wiki</a> for more details on this settings</h5>
 	</div>
 	<div class="modal-body">
 		<table class="table table-condensed">
 			<tr>
+				<td colspan="3" style="vertical-align: bottom, horizontal-align: center"><h4>Tuya Device Attributes</h4></td>
+			</tr>
+			<tr aria-rowspan="2"></tr>
+			<tr>
 				<td><div class="controls"><label class="control-label">{{ _('IP') }}</label><input type="text" class="input-block-level" data-bind="value: ip" /></div></td>
 				<td><div class="controls"><label class="control-label">{{ _('Label') }}</label><input type="text" class="input input-small" data-bind="value: label" required/></div></td>
-				<td><div class="controls"><label class="control-label"><a href="http://fontawesome.io/3.2.1/cheatsheet/" target="_blank">{{ _('Icon Class') }}</a></label><input type="text" class="input-block-level" data-bind="value: icon" /></div></td>
+				<td></td>
 			</tr>
 			<tr>
 				<td><div class="controls"><label class="control-label">{{ _('Device ID') }}</label><input type="text" class="input-block-level" data-bind="value: id" /></div></td>
-				<td><div class="controls"><label class="control-label">{{ _('Local Key') }}</label><input type="password" clas"input-block-level" data-bind="value: localKey" /></div></td>
-				<td><div class="controls"><label class="control-label">{{ _('Plug Slot') }}</label><input type="text" class="input input-small" data-bind="value: slot" /></div></td>
+				<td><div class="controls"><label class="control-label">{{ _('Local Key') }}</label><input type="password" class="input-block-level" data-bind="value: localKey" /></div></td>
+				<td><div class="controls"><label class="control-label">{{ _('Smart Outlet Slot') }}</label><input type="text" class="input input-small" data-bind="value: slot" /></div></td>
+			</tr>
+			<tr>
+				<td colspan="3" style="vertical-align: bottom, horizontal-align: center"><hr></td>
+			</tr>
+			<tr>
+				<td colspan="3" style="vertical-align: bottom, horizontal-align: center"><h4>Plugin Behavior</h4></td>
+			</tr>
+			<tr aria-rowspan="4"></tr>
+			<tr>
+				<td td colspan="2"><div class="controls"><label class="control-label"><a href="http://fontawesome.io/3.2.1/cheatsheet/" target="_blank">{{ _('Octoprint top bar Icon') }}</a></label><input type="text" class="input-block-level" data-bind="value: icon" /></div></td>
 			</tr>
 			<tr>
 				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: displayWarning"/> Warning Prompt</label></div></td>
 				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: warnPrinting"/> Warn While Printing</label></div></td>
-				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: v33"/> Version 3.3</label></div></td>
+				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: v33"/> Use Protocol 3.3</label></div></td>
 			</tr>
 			<tr>
-				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: autoConnect"/> Auto Connect</label><input type="text" data-bind="value: autoConnectDelay,visible: autoConnect" class="input input-small" /></div></td>
-				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: autoDisconnect"/> Auto Disconnect</label><input type="text" data-bind="value: autoDisconnectDelay,visible: autoDisconnect" class="input input-small" /></div></td>
+				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: autoConnect"/> Auto Connect to Printer</label></div></td>
+				<td style="vertical-align: bottom"><div class="controls" data-bind="visible: autoConnect"><label class="control-label"> Delay </label><input type="text" data-bind="value: autoConnectDelay" class="input input-small" /> sec.</div></td>
 			</tr>
 			<tr>
-				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: useCountdownRules"/> Use Countdown Timers</label></div></td>
+				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: autoDisconnect"/> Auto Disconnect from Printer</label></div></td>
+				<td style="vertical-align: bottom"><div class="controls" data-bind="visible: autoDisconnect"><label class="control-label"> Delay </label><input type="text" data-bind="value: autoDisconnectDelay" class="input input-small" /> sec.</div></td>
+			</tr>
+			<tr>
+				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: useCountdownRules"/> Use Device Countdown Timers</label></div></td>
 				<td></td>
 				<td></td>
 			</tr>
 			<tr data-bind="visible: useCountdownRules">
-				<td><div class="controls"><label class="control-label">{{ _('On Delay Countdown') }}</label><input type="text" data-bind="value: countdownOnDelay" class="input input-small" /></div></td>
-				<td><div class="controls"><label class="control-label">{{ _('Off Delay Countdown') }}</label><input type="text" data-bind="value: countdownOffDelay" class="input input-small" /></div></td>
+				<td><div class="controls"><label class="control-label">{{ _('On Timer') }}</label><input type="text" data-bind="value: countdownOnDelay" class="input input-small" /> sec.</div></td>
+				<td><div class="controls"><label class="control-label">{{ _('Off Timer') }}</label><input type="text" data-bind="value: countdownOffDelay" class="input input-small" /> sec.</div></td>
 				<td></td>
 			</tr>
 			<tr>
@@ -92,17 +111,17 @@
 				<td></td>
 			</tr>
 			<tr data-bind="visible: gcodeEnabled">
-				<td><div class="controls"><label class="control-label">{{ _('GCODE On Delay') }}</label><input type="text" data-bind="value: gcodeOnDelay" class="input input-small" /></div></td>
-				<td><div class="controls"><label class="control-label">{{ _('GCODE Off Delay') }}</label><input type="text" data-bind="value: gcodeOffDelay" class="input input-small" /></div></td>
+				<td><div class="controls"><label class="control-label">{{ _('GCODE On Delay') }}</label><input type="text" data-bind="value: gcodeOnDelay" class="input input-small" /> sec.</div></td>
+				<td><div class="controls"><label class="control-label">{{ _('GCODE Off Delay') }}</label><input type="text" data-bind="value: gcodeOffDelay" class="input input-small" /> sec.</div></td>
 				<td></td>
 			</tr>
 			<tr>
 				<td colspan="2" style="vertical-align: bottom"><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: sysCmdOn"/> Run System Command After On</label><input type="text" data-bind="value: sysRunCmdOn,visible: sysCmdOn" class="input-block-level" /></div></td>
-				<td style="vertical-align: bottom"><div class="controls" data-bind="visible: sysCmdOn"><label class="control-label">{{ _('Delay') }}</label><input type="text" data-bind="value: sysCmdOnDelay"  class="input input-small" /></div></td>
+				<td style="vertical-align: bottom"><div class="controls" data-bind="visible: sysCmdOn"><label class="control-label">{{ _('Delay') }}</label><input type="text" data-bind="value: sysCmdOnDelay"  class="input input-small" /> sec.</div></td>
 			</tr>
 			<tr>
 				<td colspan="2" style="vertical-align: bottom"><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: sysCmdOff"/> Run System Command Before Off</label><input type="text" data-bind="value: sysRunCmdOff,visible: sysCmdOff" class="input-block-level" /></div></td>
-				<td style="vertical-align: bottom"><div class="controls" data-bind="visible: sysCmdOff"><label class="control-label">{{ _('Delay') }}</label><input type="text" data-bind="value: sysCmdOffDelay"  class="input input-small" /></div></td>
+				<td style="vertical-align: bottom"><div class="controls" data-bind="visible: sysCmdOff"><label class="control-label">{{ _('Delay') }}</label><input type="text" data-bind="value: sysCmdOffDelay"  class="input input-small" /> sec.</div></td>
 			</tr>
 		</table>
 	</div>
