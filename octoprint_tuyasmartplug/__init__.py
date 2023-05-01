@@ -167,17 +167,15 @@ class tuyasmartplugPlugin(
                     int(plug["autoConnectDelay"]), self._printer.connect
                 )
                 c.start()
-                if plug["sysCmdOn"]:
-                    t = threading.Timer(
-                        int(plug["sysCmdOnDelay"]),
-                        os.system,
-                        args=[plug["sysRunCmdOn"]],
-                    )
-                    t.start()
-                else:
-                    self._plugin_manager.send_plugin_message(
-                        self._identifier, dict(currentState="unknown", label=pluglabel)
-                    )
+            if plug["sysCmdOn"]:
+                t = threading.Timer(
+                    int(plug["sysCmdOnDelay"]), os.system, args=[plug["sysRunCmdOn"]]
+                )
+                t.start()
+        else:
+            self._plugin_manager.send_plugin_message(
+                self._identifier, dict(currentState="unknown", label=pluglabel)
+            )
 
     def turn_off(self, pluglabel):
         self._tuyasmartplug_logger.debug("Turning off %s." % pluglabel)
@@ -201,9 +199,9 @@ class tuyasmartplugPlugin(
                 int(plug["sysCmdOffDelay"]), os.system, args=[plug["sysRunCmdOff"]]
             )
             t.start()
-            if plug["autoDisconnect"]:
-                self._printer.disconnect()
-                time.sleep(int(plug["autoDisconnectDelay"]))
+        if plug["autoDisconnect"]:
+            self._printer.disconnect()
+            time.sleep(int(plug["autoDisconnectDelay"]))
 
         if not plug["useCountdownRules"]:
             chk = self.sendCommand("off", plug["label"])
@@ -219,10 +217,7 @@ class tuyasmartplugPlugin(
         self._tuyasmartplug_logger.debug("Checking status of %s." % pluglabel)
         if pluglabel != "":
             response = resp or self.sendCommand("info", pluglabel)
-            if not isinstance(response, dict) or "Error" in response:
-                self._octotuya_logger.warning(
-                    "Unable to check device status: %s" % response
-                )
+            if response is False:
                 self._plugin_manager.send_plugin_message(
                     self._identifier, dict(currentState="unknown", label=pluglabel)
                 )
@@ -313,9 +308,9 @@ class tuyasmartplugPlugin(
                 return False
             self._tuyasmartplug_logger.debug("Network error")
             return False
-        except:
+        except Exception as e:
             self._tuyasmartplug_logger.debug(
-                "Something went wrong while running the command"
+                "Something went wrong while running the command " + str(e)
             )
             return False
 
@@ -337,90 +332,72 @@ class tuyasmartplugPlugin(
                     "Received M80 command, attempting power on of %s." % name
                 )
                 plug = self.plug_search(
-                    self._settings.get(["arrSmartplugs"]), "label", name
+                    self._settings.get(["arrSmartplugs"]), "ip", name
                 )
                 if not plug:
-                    self._tuyasmartplug_logger.debug("No outlet found with label %s." % name)
-                else:  
-                    self._tuyasmartplug_logger.debug(plug)
-                    if plug["gcodeEnabled"]:
-                        t = threading.Timer(
-                            int(plug["gcodeOnDelay"]),
-                            self.turn_on,
-                            args=[plug["label"]],
-                        )
-                        t.start()
-                        return
-                    else:
-                        return
+                    plug = self.plug_search(
+                        self._settings.get(["arrSmartplugs"]), "label", name
+                    )
+                self._tuyasmartplug_logger.debug(plug)
+                if plug["gcodeEnabled"]:
+                    t = threading.Timer(
+                        int(plug["gcodeOnDelay"]), self.turn_on, args=[plug["label"]]
+                    )
+                    t.start()
+                return
             elif cmd.startswith("M81"):
                 name = re.sub(r"^M81\s?", "", cmd)
                 self._tuyasmartplug_logger.debug(
-                    "Received M81 command, attempting power off outlet of label %s." % name
+                    "Received M81 command, attempting power off of %s." % name
                 )
                 plug = self.plug_search(
-                    self._settings.get(["arrSmartplugs"]), "label", name
+                    self._settings.get(["arrSmartplugs"]), "ip", name
                 )
                 if not plug:
-                    self._tuyasmartplug_logger.debug("No outlet found with label %s." % name)
-                else:  
-                    self._tuyasmartplug_logger.debug(plug)
-                    if plug["gcodeEnabled"]:
-                        t = threading.Timer(
-                            int(plug["gcodeOffDelay"]),
-                            self.gcode_turn_off,
-                            args=[plug],
-                        )
-                        t.start()
-                        return
-                    else:
-                        return
+                    plug = self.plug_search(
+                        self._settings.get(["arrSmartplugs"]), "label", name
+                    )
+                self._tuyasmartplug_logger.debug(plug)
+                if plug["gcodeEnabled"]:
+                    t = threading.Timer(
+                        int(plug["gcodeOffDelay"]), self.gcode_turn_off, args=[plug]
+                    )
+                    t.start()
+                return
             elif cmd.startswith("G4 P1"):
                 name = re.sub(r"^G4 P1\s?", "", cmd)
                 self._tuyasmartplug_logger.debug(
-                    "Received G4 P1 command, attempting power on outlet of label %s."
-                    % name
+                    "Received G4 P1 command, attempting power on of %s." % name
                 )
-                plug = self.plug_search(
-                    self._settings.get(["arrSmartplugs"]), "label", name
-                )
+                plug = self.plug_search(self._settings.get(["arrSmartplugs"]), "ip", name)
                 if not plug:
-                    self._tuyasmartplug_logger.debug("No outlet found with label %s." % name)
-                else:  
-                    self._tuyasmartplug_logger.debug(plug)
-                    if plug["gcodeEnabled"]:
-                        t = threading.Timer(
-                            int(plug["gcodeOnDelay"]),
-                            self.turn_on,
-                            args=[plug["label"]],
-                        )
-                        t.start()
-                        return
-                    else:
-                        return
+                    plug = self.plug_search(
+                        self._settings.get(["arrSmartplugs"]), "label", name
+                    )
+                self._tuyasmartplug_logger.debug(plug)
+                if plug["gcodeEnabled"]:
+                    t = threading.Timer(
+                        int(plug["gcodeOnDelay"]), self.turn_on, args=[plug["label"]]
+                    )
+                    t.start()
+                return None
             elif cmd.startswith("G4 P2"):
                 name = re.sub(r"^G4 P2\s?", "", cmd)
-                self._octotuya_logger.debug(
-                    "Received G4 P2 command, attempting power off outlet of label %s."
-                    % name
+                self._tuyasmartplug_logger.debug(
+                    "Received G4 P2 command, attempting power off of %s." % name
                 )
-                plug = self.plug_search(
-                    self._settings.get(["arrSmartplugs"]), "label", name
-                )
+                plug = self.plug_search(self._settings.get(["arrSmartplugs"]), "ip", name)
                 if not plug:
-                    self._tuyasmartplug_logger.debug("No outlet found with label %s." % name)
-                else:    
-                    self._tuyasmartplug_logger.debug(plug)
-                    if plug["gcodeEnabled"]:
-                        t = threading.Timer(
-                            int(plug["gcodeOffDelay"]),
-                            self.gcode_turn_off,
-                            args=[plug],
-                        )
-                        t.start()
-                        return
-                    else:
-                        return
+                    plug = self.plug_search(
+                        self._settings.get(["arrSmartplugs"]), "label", name
+                    )
+                self._tuyasmartplug_logger.debug(plug)
+                if plug["gcodeEnabled"]:
+                    t = threading.Timer(
+                        int(plug["gcodeOffDelay"]), self.gcode_turn_off, args=[plug]
+                    )
+                    t.start()
+                return None
 
     # ~~ Softwareupdate hook
 
@@ -447,7 +424,7 @@ class tuyasmartplugPlugin(
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
 __plugin_name__ = "Tuya Smartplug"
-__plugin_version__ = "0.3.1"
+__plugin_version__ = "0.3.2"
 __plugin_pythoncompat__ = ">=2.7,<4"
 
 
