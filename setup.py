@@ -35,7 +35,7 @@ plugin_license = "AGPLv3"
 # Any additional requirements besides OctoPrint should be listed here
 plugin_requires = [
 	'pyaes==1.6.1',
-	'pycrypto==2.6.1'
+	'pycryptodome==3.17'
 ]
 
 ### --------------------------------------------------------------------------------------------------------------------
