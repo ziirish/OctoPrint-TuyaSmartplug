@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import
 
+import traceback
 import octoprint.plugin
 from octoprint.server import user_permission
 import socket
@@ -310,7 +311,7 @@ class tuyasmartplugPlugin(
             return False
         except Exception as e:
             self._tuyasmartplug_logger.debug(
-                "Something went wrong while running the command " + str(e)
+                "Something went wrong while running the command " + str(e) + "\n" + traceback.format_exc()
             )
             return False
 
