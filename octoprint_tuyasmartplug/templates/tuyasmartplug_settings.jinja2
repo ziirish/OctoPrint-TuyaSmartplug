@@ -11,7 +11,6 @@
 		<tr data-bind="attr: {title: label}">
 			<td><span data-bind="text: label" /></td>
 			<td style="text-align:center">
-				<i class="icon" data-bind="css: {'icon-check': v33(),'icon-check-empty': !v33()}" title="Version 3.3" />
 				<i class="icon" data-bind="css: {'icon-check': displayWarning(),'icon-check-empty': !displayWarning()}" title="Warning Prompt" />
 				<i class="icon" data-bind="css: {'icon-check': warnPrinting(),'icon-check-empty': !warnPrinting()}" title="Warn While Printing" />
 				<i class="icon" data-bind="css: {'icon-check': autoConnect(),'icon-check-empty': !autoConnect()}" title="Auto Connect" />
@@ -70,7 +69,15 @@
 			<tr>
 				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: displayWarning"/> Warning Prompt</label></div></td>
 				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: warnPrinting"/> Warn While Printing</label></div></td>
-				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: v33"/> Version 3.3</label></div></td>
+				<td><div class="controls"><label class="control-label">{{ _('Plug Version') }}</label>
+				<select data-bind="value: plugversion">
+                      <option value="3.1">3.1</option>
+                      <option value="3.2">3.2</option>
+                      <option value="3.3">3.3</option>
+                      <option value="3.4">3.4</option>
+                      <option value="3.5">3.5</option>
+                    </select>
+            </div></td>
 			</tr>
 			<tr>
 				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: autoConnect"/> Auto Connect</label><input type="text" data-bind="value: autoConnectDelay,visible: autoConnect" class="input input-small" /></div></td>
@@ -92,8 +99,8 @@
 				<td></td>
 			</tr>
 			<tr data-bind="visible: gcodeEnabled">
-				<td><div class="controls"><label class="control-label">{{ _('GCODE On Delay') }}</label><input type="text" data-bind="value: gcodeOnDelay" class="input input-small" /></div></td>
-				<td><div class="controls"><label class="control-label">{{ _('GCODE Off Delay') }}</label><input type="text" data-bind="value: gcodeOffDelay" class="input input-small" /></div></td>
+				<td><div class="controls"><label class="control-label">{{ _('GCODE On Delay(M80)') }}</label><input type="text" data-bind="value: gcodeOnDelay" class="input input-small" /></div></td>
+				<td><div class="controls"><label class="control-label">{{ _('GCODE Off Delay(M81)') }}</label><input type="text" data-bind="value: gcodeOffDelay" class="input input-small" /></div></td>
 				<td></td>
 			</tr>
 			<tr>
