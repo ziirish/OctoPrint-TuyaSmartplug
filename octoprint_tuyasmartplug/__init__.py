@@ -115,7 +115,7 @@ class tuyasmartplugPlugin(
                 self._tuyasmartplug_logger.setLevel(logging.INFO)
 
     def get_settings_version(self):
-        return 3
+        return 4
 
     def on_settings_migrate(self, target, current=None):
         if current is None or current < self.get_settings_version():
