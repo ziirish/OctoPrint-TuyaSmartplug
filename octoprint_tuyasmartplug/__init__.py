@@ -11,6 +11,9 @@ import re
 import threading
 import time
 import tinytuya
+import tinytuya.scanner
+from io import StringIO
+import sys
 
 
 class tuyasmartplugPlugin(
@@ -152,13 +155,10 @@ class tuyasmartplugPlugin(
             self._settings.get(["arrSmartplugs"]), "label", pluglabel
         )
         self._tuyasmartplug_logger.debug(plug)
-        if plug["useCountdownRules"]:
-            chk = self.sendCommand(
-                "countdown", plug["label"], int(plug["countdownOnDelay"])
-            )
-        else:
-            chk = self.sendCommand("on", plug["label"])
-
+        if plug["useCountdownRules"] :
+            time.sleep(int(plug["countdownOnDelay"]))
+        chk = self.sendCommand("on", plug["label"])
+        self._tuyasmartplug_logger.debug("chk:"+str(chk))
         if chk is not False:
             self.check_status(plug["label"], chk)
             if plug["autoConnect"]:
@@ -173,10 +173,10 @@ class tuyasmartplugPlugin(
                         args=[plug["sysRunCmdOn"]],
                     )
                     t.start()
-                else:
-                    self._plugin_manager.send_plugin_message(
-                        self._identifier, dict(currentState="unknown", label=pluglabel)
-                    )
+            else:
+                self._plugin_manager.send_plugin_message(
+                    self._identifier, dict(currentState="unknown", label=pluglabel)
+                )
 
     def turn_off(self, pluglabel):
         self._tuyasmartplug_logger.debug("Turning off %s." % pluglabel)
@@ -191,9 +191,7 @@ class tuyasmartplugPlugin(
         )
         self._tuyasmartplug_logger.debug(plug)
         if plug["useCountdownRules"]:
-            chk = self.sendCommand(
-                "countdown", plug["label"], int(plug["countdownOffDelay"])
-            )
+           time.sleep(int(plug["countdownOffDelay"]))
 
         if plug["sysCmdOff"]:
             t = threading.Timer(
@@ -204,8 +202,8 @@ class tuyasmartplugPlugin(
                 self._printer.disconnect()
                 time.sleep(int(plug["autoDisconnectDelay"]))
 
-        if not plug["useCountdownRules"]:
-            chk = self.sendCommand("off", plug["label"])
+
+        chk = self.sendCommand("off", plug["label"])
 
         if chk is not False:
             self.check_status(plug["label"], chk)
@@ -285,21 +283,29 @@ class tuyasmartplugPlugin(
             "countdown": ("set_timer", None),
         }
 
-        command, arg = commands[cmd]
-        func = getattr(device, command, None)
-        if not func:
-            self._tuyasmartplug_logger.debug("No such command '%s'" % command)
-            return False
-        if args:
-            func(args)
-        elif arg is not None:
-            func(arg, plug["slot"])
-        else:
-            func()
-            time.sleep(0.5)
+        if cmd == "on":
+            ret = device.turn_on(int(plug["slot"]))
+        if cmd == "off":
+            ret  = device.turn_off(int(plug["slot"]))
+        if cmd == "info":
             ret = device.status()
-            self._tuyasmartplug_logger.debug("Status: %s" % str(ret))
-            return ret
+        self._tuyasmartplug_logger.debug("Status: %s" % str(ret))
+        return ret
+        # command, arg = commands[cmd]
+        # func = getattr(device, command, None)
+        # if not func:
+        #     self._tuyasmartplug_logger.debug("No such command '%s'" % command)
+        #     return False
+        # if args:
+        #     func(args)
+        # elif arg is not None:
+        #     func(arg, plug["slot"])
+        # else:
+        #     func()
+        #     time.sleep(0.5)
+        #     ret = device.status()
+        #     self._tuyasmartplug_logger.debug("Status: %s" % str(ret))
+        #     return ret
 
     # ~~ Gcode processing hook
 
@@ -314,6 +320,16 @@ class tuyasmartplugPlugin(
     def processGCODE(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         if gcode:
             self._tuyasmartplug_logger.debug(str(cmd))
+            if cmd.startswith("M123"):
+                tmp = sys.stdout
+                my_result = StringIO()
+                sys.stdout = my_result
+                tinytuya.scanner.scan()
+                sys.stdout = tmp
+                print(my_result.getvalue())
+                self._tuyasmartplug_logger.debug(my_result.getvalue())
+                return my_result.getvalue()
+
             if cmd.startswith("M80"):
                 name = re.sub(r"^M80\s?", "", cmd)
                 self._tuyasmartplug_logger.debug(
