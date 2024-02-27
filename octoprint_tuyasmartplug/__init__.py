@@ -12,6 +12,7 @@ import threading
 import time
 import tinytuya
 import tinytuya.scanner
+import tinytuya.wizard
 from io import StringIO
 import sys
 
@@ -90,12 +91,73 @@ class tuyasmartplugPlugin(
                     "useCountdownRules": False,
                     "countdownOnDelay": 0,
                     "countdownOffDelay": 0,
+
                 }
             ],
             pollingInterval=15,
             pollingEnabled=False,
+            apiKey = "",
+            apiSecret = "",
+            apiRegion  ="us",
+
+        )
+    def set_settings_from_tinytuya_apiscan(self,devices):
+        arrSmartplugs = []
+
+        for device in devices:
+            print(device['name'])
+            print(device['id'])
+            print(device['ip'])
+            print(device['key'])
+            print(device['ver'])
+            arrSmartplug = {
+                    "ip": device['ip'],
+                    "id": device['id'],
+                    "slot": 1,
+                    "localKey": device['key'],
+                    "label": device['name'],
+                    "icon": "icon-bolt",
+                    "displayWarning": True,
+                    "warnPrinting": False,
+                    "gcodeEnabled": False,
+                    "plugversion": device['ver'],
+                    "gcodeOnDelay": 0,
+                    "gcodeOffDelay": 0,
+                    "autoConnect": True,
+                    "autoConnectDelay": 10.0,
+                    "autoDisconnect": True,
+                    "autoDisconnectDelay": 0,
+                    "sysCmdOn": False,
+                    "sysRunCmdOn": "",
+                    "sysCmdOnDelay": 0,
+                    "sysCmdOff": False,
+                    "sysRunCmdOff": "",
+                    "sysCmdOffDelay": 0,
+                    "currentState": "unknown",
+                    "btnColor": "#808080",
+                    "useCountdownRules": False,
+                    "countdownOnDelay": 0,
+                    "countdownOffDelay": 0,
+
+                }
+
+            arrSmartplugs.append(arrSmartplug)
+        #print(arrSmartplugs)
+        settingsvalues = dict(
+            debug_logging= self._settings.get_boolean(["debug_logging"]),
+            arrSmartplugs = arrSmartplugs,
+            pollingInterval = self._settings.get(['pollingInterval']),
+            pollingEnabled = self._settings.get_boolean(['pollingEnabled']),
+            apiKey = self._settings.get(['apiKey']),
+            apiSecret = self._settings.get(['apiSecret']),
+            apiRegion = self._settings.get(['apiRegion']),
         )
 
+        arrSmartplugs = dict(arrSmartplugs = arrSmartplugs)
+        self.on_settings_save(arrSmartplugs)
+
+
+    # Retablir plus tard
     def get_settings_restricted_paths(self):
         return dict(
             admin=[
@@ -106,10 +168,12 @@ class tuyasmartplugPlugin(
         )
 
     def on_settings_save(self, data):
+        print(data)
         old_debug_logging = self._settings.get_boolean(["debug_logging"])
 
-        octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-
+        print("Before saving",self._settings.get_all_data())
+        saveresult = octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
+        print("\nSetting saved result",saveresult)
         new_debug_logging = self._settings.get_boolean(["debug_logging"])
         if old_debug_logging != new_debug_logging:
             if new_debug_logging:
@@ -144,6 +208,7 @@ class tuyasmartplugPlugin(
     # ~~ SimpleApiPlugin mixin
 
     def turn_on(self, pluglabel):
+
         self._tuyasmartplug_logger.debug("Turning on %s." % pluglabel)
         if self.is_turned_on(pluglabel=pluglabel):
             self._tuyasmartplug_logger.debug("Plug %s already turned on" % pluglabel)
@@ -213,6 +278,8 @@ class tuyasmartplugPlugin(
             )
 
     def check_status(self, pluglabel, resp=None):
+        print(self._settings.get(["arrSmartplugs"]))
+
         self._tuyasmartplug_logger.debug("Checking status of %s." % pluglabel)
         if pluglabel != "":
             response = resp or self.sendCommand("info", pluglabel)
@@ -291,21 +358,6 @@ class tuyasmartplugPlugin(
             ret = device.status()
         self._tuyasmartplug_logger.debug("Status: %s" % str(ret))
         return ret
-        # command, arg = commands[cmd]
-        # func = getattr(device, command, None)
-        # if not func:
-        #     self._tuyasmartplug_logger.debug("No such command '%s'" % command)
-        #     return False
-        # if args:
-        #     func(args)
-        # elif arg is not None:
-        #     func(arg, plug["slot"])
-        # else:
-        #     func()
-        #     time.sleep(0.5)
-        #     ret = device.status()
-        #     self._tuyasmartplug_logger.debug("Status: %s" % str(ret))
-        #     return ret
 
     # ~~ Gcode processing hook
 
@@ -320,15 +372,47 @@ class tuyasmartplugPlugin(
     def processGCODE(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         if gcode:
             self._tuyasmartplug_logger.debug(str(cmd))
-            if cmd.startswith("M123"):
-                tmp = sys.stdout
-                my_result = StringIO()
-                sys.stdout = my_result
+            if cmd.startswith("M1234"):
+                configurationfilepath = os.getcwd() +  "/tinytuya.json"
+                print("configurationfilepath",configurationfilepath)
+                configurationjsondict = {
+                    "apiKey" : self._settings.get(["apiKey"]),
+                    "apiSecret" : self._settings.get(["apiSecret"]),
+                    "apiRegion" : self._settings.get(["apiRegion"]),
+                    "apiDeviceID": "scan"
+                }
+                print(configurationjsondict)
+                # Convert and write JSON object to file
+                with open(configurationfilepath, "w") as outfile:
+                    json.dump(configurationjsondict, outfile)
+
+                tinytuya.wizard.wizard(quicklist=True)
+
+                configurationjson = open(configurationfilepath, "r").read()
+                print(configurationjson)
+                snapshotpath = os.getcwd() + "/snapshot.json"
+                if os.path.exists(snapshotpath):
+                    os.remove(snapshotpath)
                 tinytuya.scanner.scan()
-                sys.stdout = tmp
-                print(my_result.getvalue())
-                self._tuyasmartplug_logger.debug(my_result.getvalue())
-                return my_result.getvalue()
+                snapshotjson = open(snapshotpath, "r").read()
+                self._tuyasmartplug_logger.debug(snapshotjson)
+                scanresults = json.loads(snapshotjson)
+                self.set_settings_from_tinytuya_apiscan(scanresults['devices'])
+                if os.path.exists(snapshotpath):
+                    os.remove(snapshotpath)
+                if os.path.exists(configurationfilepath):
+                    os.remove(configurationfilepath)
+                formatedscanresults = ""
+                deviceindex=0
+                for device in scanresults['devices']:
+                    formatedscanresults += "Device #" + str(deviceindex) + "\n"
+                    formatedscanresults += "Name : " + device['name'] + "\n"
+                    formatedscanresults += "Id : " + device['id'] + "\n"
+                    formatedscanresults += "Ip address : " + device['ip'] + "\n"
+                    formatedscanresults += "Local Key : " + device['key'] + "\n"
+                    formatedscanresults += "Plug Version : " + device['ver'] + "\n"
+                    deviceindex+=1
+                return formatedscanresults
 
             if cmd.startswith("M80"):
                 name = re.sub(r"^M80\s?", "", cmd)

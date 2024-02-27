@@ -48,6 +48,30 @@
 		<input type="number" min="0" data-bind="value: settings.settings.plugins.tuyasmartplug.pollingInterval" />
 	</div>
 </div>
+<div class="control-group">
+	<div class="controls">
+		<label class="control-label">{{ _('API Key') }}</label>
+		<input type="text"  data-bind="value: settings.settings.plugins.tuyasmartplug.apiKey" />
+	</div>
+</div>
+<div class="control-group">
+	<div class="controls">
+		<label class="control-label">{{ _('API Secret') }}</label>
+		<input type="password"  data-bind="value: settings.settings.plugins.tuyasmartplug.apiSecret" />
+	</div>
+</div>
+<div class="control-group">
+	<div class="controls">
+		<label class="control-label">{{ _('API Region') }}</label>
+		<select data-bind="value: settings.settings.plugins.tuyasmartplug.apiRegion">
+                      <option value="cn">(cn)China Data Center</option>
+                      <option value="us">(us)Western America Data Center</option>
+                      <option value="eu">(eu)Central Europe Data Center</option>
+                      <option value="eu-w">(eu-w)Western Europe Data Center</option>
+                      <option value="in">(in)India Data Center</option>
+        </select>
+	</div>
+</div>
 
 <div id="TuyaPlugEditor" data-bind="with: selectedPlug" class="modal hide fade">
 	<div class="modal-header">
@@ -69,7 +93,7 @@
 			<tr>
 				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: displayWarning"/> Warning Prompt</label></div></td>
 				<td><div class="controls"><label class="checkbox"><input type="checkbox" data-bind="checked: warnPrinting"/> Warn While Printing</label></div></td>
-				<td><div class="controls"><label class="control-label">{{ _('Plug Version') }}</label>
+				<td><div class="controls"><label class="control-label">{{ _('Plug Version.') }}</label>
 				<select data-bind="value: plugversion">
                       <option value="3.1">3.1</option>
                       <option value="3.2">3.2</option>
