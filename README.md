@@ -1,3 +1,6 @@
+Most of this ReadMe is obsolete. Here is a [video](http://moduloinfo.ca/tuyavideo.mp4) that teach how to use the new version. If the interest is there, I will make a proper readme file or accept help :)
+
+
 # OctoPrint-TuyaSmartplug
 
 Work based on [OctoPrint-TPLinkSmartplug](https://github.com/jneilliii/OctoPrint-TPLinkSmartplug) and [python-tuya](https://github.com/clach04/python-tuya).
