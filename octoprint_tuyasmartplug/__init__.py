@@ -371,10 +371,19 @@ class tuyasmartplugPlugin(
 
     def processGCODE(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         if gcode:
+            # To run octoprint server via ssh :
+            # ssh pi@192.168.2.X
+            # sudo systemctl stop octoprint.service
+            # /home/pi/oprint/bin/octoprint serve --host=127.0.0.1 --port=5000
             self._tuyasmartplug_logger.debug(str(cmd))
             if cmd.startswith("M1234"):
+                tuyaplugindir = os.path.dirname(os.path.realpath(__file__))
+                print("tuyaplugindir",tuyaplugindir)
+                os.chdir(tuyaplugindir)
+                print("os.getcwd()",os.getcwd())
                 configurationfilepath = os.getcwd() +  "/tinytuya.json"
-                print("configurationfilepath",configurationfilepath)
+                #print("configurationfilepath",configurationfilepath)
+                self._tuyasmartplug_logger.debug(configurationfilepath)
                 configurationjsondict = {
                     "apiKey" : self._settings.get(["apiKey"]),
                     "apiSecret" : self._settings.get(["apiSecret"]),
@@ -393,10 +402,14 @@ class tuyasmartplugPlugin(
                 snapshotpath = os.getcwd() + "/snapshot.json"
                 if os.path.exists(snapshotpath):
                     os.remove(snapshotpath)
-                tinytuya.scanner.scan()
+
+                tinytuya.scanner.scan(forcescan=True,assume_yes=True)
+
                 snapshotjson = open(snapshotpath, "r").read()
                 self._tuyasmartplug_logger.debug(snapshotjson)
                 scanresults = json.loads(snapshotjson)
+                if scanresults['devices'] == []:
+                    return "Scan failed, make sure to power off any devices that may be connected to your plug for the detection step.\n"
                 self.set_settings_from_tinytuya_apiscan(scanresults['devices'])
                 if os.path.exists(snapshotpath):
                     os.remove(snapshotpath)
